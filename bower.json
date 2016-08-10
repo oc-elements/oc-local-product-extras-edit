@@ -5,6 +5,7 @@
   "dependencies": {
     "polymer": "Polymer/polymer#^1.4.0",
     "oc-product-api": "git://github.com/oc-elements/oc-product-api#1.x",
+    "oc-local-product-extras-api": "git://github.com/oc-elements/oc-local-product-extras-api#1.x",
     "oc-list-selection": "git://github.com/oc-elements/oc-list-selection#1.x"
   },
   "devDependencies": {

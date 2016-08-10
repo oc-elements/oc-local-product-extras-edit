@@ -1,12 +1,13 @@
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../oc-product-api/oc-product-api.html">
+<link rel="import" href="../oc-local-product-extras-api/oc-local-product-extras-api.html">
 <link rel="import" href="../oc-list-selection/oc-list-selection.html">
 
 <!--
 `oc-local-product-extras-edit`
 Element to edit local product extras on the Ordercloud platform
 
-@demo demo/index.html 
+@demo demo/index.html
 -->
 
 <dom-module id="oc-local-product-extras-edit">
@@ -18,6 +19,7 @@ Element to edit local product extras on the Ordercloud platform
     </style>
 
     <oc-product-api id="prodApi"></oc-product-api>
+    <oc-local-product-extras-api id="extraApi"></oc-local-product-extras-api>
 
     <oc-list-selection></oc-list-selection>
 
