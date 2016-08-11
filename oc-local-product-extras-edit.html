@@ -21,7 +21,9 @@ Element to edit local product extras on the Ordercloud platform
     <oc-product-api id="prodApi"></oc-product-api>
     <oc-local-product-extras-api id="extraApi"></oc-local-product-extras-api>
 
-    <oc-list-selection></oc-list-selection>
+    <oc-list-selection selected-list="[[selectedList]]" selectable-list="[[selectableList]]"></oc-list-selection>
+
+    <paper-button on-tap="updateExtras" raised>Update Extras</paper-button>
 
   </template>
 
@@ -31,26 +33,70 @@ Element to edit local product extras on the Ordercloud platform
       is: 'oc-local-product-extras-edit',
 
       properties: {
+        organisationId: Number,
+        productId : Number,
+        selectedList : Array,
+        selectableList: Array,
 
-      },
+        originalList: Array,
 
-      getProductExtras : function(productId){
-//        var getSelectedExtras = this.getSelectedExtras(productId);
-//        return this.getSelectedExtras(productId);
+        loading: {
+          type: Boolean,
+          notify: true
+        }
 
-//        return Promise.all([getSelectedExtras.completes]).
-//                then(function(response){
-//                  console.log(response)
-//                }.bind(this))
       },
 
       getSelectedExtras : function(productId){
-        return this.$.prodApi.getProductExtras(productId)
+        return this.$.prodApi.getProductOptionSets(productId);
       },
 
       getSelectableExtras : function(){
-
+        return this.$.extraApi.getExtraSets(1, -1);
       },
+
+      updateExtras : function(){
+
+        this.loading = true;
+
+        var promisesToExecute = [],
+                selected = this.selectedList,
+                original = this.originalList;
+
+        selected.forEach(function(obj){
+          var isInOriginal = false;
+
+          for(var i=0; i<original.length; i++) {
+            if(obj.id === original[i].id){
+              isInOriginal = true;
+            }
+          }
+
+          if(!isInOriginal) {
+            promisesToExecute.push(this.$.prodApi.addProductExtraSet(this.productId, obj.id))
+          }
+
+        }.bind(this))
+
+        original.forEach(function(obj){
+          var isInselected = false;
+
+          for(var i=0; i<selected.length; i++) {
+            if(obj.id === selected[i].id){
+              isInselected = true;
+            }
+          }
+
+          if(!isInselected) {
+            promisesToExecute.push(this.$.prodApi.removeProductExtraSet(this.productId, obj.id))
+          }
+
+        }.bind(this))
+
+        Promise.all(promisesToExecute)
+                .catch(this.fire.bind(this, 'extra-set-error', 'Failed to load extra sets'))
+                .finally(this.set.bind(this, 'loading', false));
+      }
 
     });
   </script>
