@@ -15,6 +15,17 @@ Element to edit local product extras on the Ordercloud platform
     <style>
       :host {
         display: block;
+        padding-bottom: 10px;
+      }
+
+      small {
+        text-align: right;
+        display: block;
+        margin-right: 20px;
+      }
+
+      paper-button {
+        margin: 10px 0;
       }
     </style>
 
@@ -22,8 +33,9 @@ Element to edit local product extras on the Ordercloud platform
     <oc-local-product-extras-api id="extraApi"></oc-local-product-extras-api>
 
     <oc-list-selection selected-list="[[selectedList]]" selectable-list="[[selectableList]]"></oc-list-selection>
+    <small>Only extra sets with extras in will display here</small>
 
-    <paper-button on-tap="updateExtras" raised>Update Extras</paper-button>
+    <paper-button on-tap="_updateExtras" raised>Update Extras</paper-button>
 
   </template>
 
@@ -31,14 +43,29 @@ Element to edit local product extras on the Ordercloud platform
     Polymer({
 
       is: 'oc-local-product-extras-edit',
+      behaviors: [OC.Behaviours.ApiConsumer],
 
       properties: {
         organisationId: Number,
-        productId : Number,
-        selectedList : Array,
-        selectableList: Array,
+        productId : {
+          type: Number,
+          computed: "_computeProductId(product)"
+        },
 
-        originalList: Array,
+        selectedList : {
+          type: Array,
+          value: function() {
+            return [];
+          }
+        },
+        selectableList: {
+          type: Array,
+          value: function() {
+            return [];
+          }
+        },
+
+        allExtraSets: Array,
 
         loading: {
           type: Boolean,
@@ -47,21 +74,66 @@ Element to edit local product extras on the Ordercloud platform
 
       },
 
+      observers: [
+        "refresh(productId)",
+        "_computeExtraSets(allExtraSets, product.extraSets)"
+      ],
+
+      refresh : function(){
+
+        if (!this.productId) {
+          return
+        }
+
+        this.loading = true;
+
+        this.getExtraSets()
+
+      },
+
       getSelectedExtras : function(productId){
         return this.$.prodApi.getProductOptionSets(productId);
       },
 
-      getSelectableExtras : function(){
-        return this.$.extraApi.getExtraSets(1, -1);
+      getExtraSets : function(){
+        return this.$.extraApi.getExtraSets(1, -1)
+                .then(this._setPropertyResponseResults.bind(this, 'allExtraSets'))
+                .catch(this.fire.bind(this, 'options_error', 'Could not load extra sets'))
+                .finally(this.set.bind(this, 'loading', false));
       },
 
-      updateExtras : function(){
+      _computeExtraSets : function(allExtraSets, productExtraSets){
 
+        allExtraSets.forEach(function(extraSet){
+
+          var isProductExtraSet = false;
+
+          productExtraSets.forEach(function(productExtraSet){
+            if(extraSet.id === productExtraSet.id) {
+              isProductExtraSet = true;
+
+              this.push('selectedList', extraSet);
+            }
+          }.bind(this));
+
+          if(!isProductExtraSet && extraSet.extras.length){
+            this.push('selectableList', extraSet);
+          }
+
+        }.bind(this));
+
+      },
+
+      _computeProductId : function(product){
+        return product.id;
+      },
+
+      _updateExtras : function(){
         this.loading = true;
 
         var promisesToExecute = [],
                 selected = this.selectedList,
-                original = this.originalList;
+                original = this.product.extraSets;
 
         selected.forEach(function(obj){
           var isInOriginal = false;
@@ -97,6 +169,7 @@ Element to edit local product extras on the Ordercloud platform
                 .catch(this.fire.bind(this, 'extra-set-error', 'Failed to load extra sets'))
                 .finally(this.set.bind(this, 'loading', false));
       }
+
 
     });
   </script>
