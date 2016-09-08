@@ -47,6 +47,7 @@ Element to edit local product extras on the Ordercloud platform
 
       properties: {
         organisationId: Number,
+        loaded: Boolean,
         productId : {
           type: Number,
           computed: "_computeProductId(product)"
@@ -81,13 +82,15 @@ Element to edit local product extras on the Ordercloud platform
 
       refresh : function(){
 
-        if (!this.productId) {
+        if (!this.productId || this.loaded) {
           return
         }
 
         this.loading = true;
 
         this.getExtraSets()
+
+        this.loaded = true;
 
       },
 
